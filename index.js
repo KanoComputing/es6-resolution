@@ -30,7 +30,7 @@ module.exports = (body, mime, filePath) => {
         const base = path.dirname(filePath);
         const resolution = resolve.sync(g2, { basedir: base });
         const importeeId = path.relative(base, resolution);
-        return `import ${g1 || ''}'${importeeId}'`;
+        return `import ${g1 || ''}'${importeeId.replace(/\\/g, '/')}'`;
     });
     return body;
 };
