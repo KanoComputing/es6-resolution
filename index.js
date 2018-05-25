@@ -5,19 +5,20 @@ module.exports = (body, mime, filePath) => {
     if (mime !== 'text/html' && mime !== 'application/javascript') {
         return body;
     }
-    if (filePath.indexOf('blockly_compressed.js') !== -1) {
+    const normalizedPath = filePath.replace(/\\/g, '/');
+    if (normalizedPath.indexOf('blockly_compressed.js') !== -1) {
         return body.replace('goog.global=this', 'goog.global=window');
     }
-    if (filePath.indexOf('cross-storage/dist/client.min.js') !== -1) {
+    if (normalizedPath.indexOf('cross-storage/dist/client.min.js') !== -1) {
         return body.replace('}(this);', '}(window);');
     }
-    if (filePath.indexOf('page.js') !== -1) {
+    if (normalizedPath.indexOf('page.js') !== -1) {
         return body.replace('}(this,', '}(window,');
     }
-    if (filePath.indexOf('md5.js') !== -1) {
+    if (normalizedPath.indexOf('md5.js') !== -1) {
         return body.replace('})(this)', '})(window)');
     }
-    if (filePath.indexOf('twemoji-min/2/twemoji.min.js') !== -1) {
+    if (normalizedPath.indexOf('twemoji-min/2/twemoji.min.js') !== -1) {
         return body.replace('var twemoji=function()', 'window.twemoji=function()');
     }
     if (!body) {
