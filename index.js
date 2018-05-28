@@ -1,6 +1,8 @@
 const path = require('path');
 const resolve = require('resolve');
 
+console.log('loaded');
+
 module.exports = (body, mime, filePath) => {
     if (mime !== 'text/html' && mime !== 'application/javascript') {
         return body;
@@ -12,7 +14,7 @@ module.exports = (body, mime, filePath) => {
     if (normalizedPath.indexOf('cross-storage/dist/client.min.js') !== -1) {
         return body.replace('}(this);', '}(window);');
     }
-    if (normalizedPath.indexOf('page.js') !== -1) {
+    if (normalizedPath.indexOf('page/page.js') !== -1) {
         return body.replace('}(this,', '}(window,');
     }
     if (normalizedPath.indexOf('md5.js') !== -1) {
@@ -25,12 +27,27 @@ module.exports = (body, mime, filePath) => {
         return body;
     }
     body = body.replace(/import (.+ from )?'(.+)'/g, (match, g1, g2) => {
+        if (filePath.indexOf('@kano/code') != -1 && g2.indexOf('./@') !==- 1) {
+            console.log(filePath, g2);
+        }
         if (g2 && (g2.startsWith('.') || g2.startsWith('/'))) {
             return match;
         }
         const base = path.dirname(filePath);
-        const resolution = resolve.sync(g2, { basedir: base });
-        const importeeId = path.relative(base, resolution);
+        let resolution;
+        try {
+            resolution = resolve.sync(g2, { basedir: '/Users/paul/workspace/kit-app-shell-electron/app/node_modules/kit-app-ui/' });
+        } catch (e) {
+            try {
+                resolution = resolve.sync(g2, { basedir: base });
+            } catch (e) {
+                return match;
+            }
+        }
+        let importeeId = path.relative(base, resolution);
+        if (!importeeId.startsWith('.')) {
+            importeeId = `./${importeeId}`;
+        }
         return `import ${g1 || ''}'${importeeId.replace(/\\/g, '/')}'`;
     });
     return body;
