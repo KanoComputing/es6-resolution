@@ -3,7 +3,7 @@ const resolve = require('resolve');
 
 console.log('loaded');
 
-module.exports = (body, mime, filePath) => {
+module.exports = (rootDir, body, mime, filePath) => {
     if (mime !== 'text/html' && mime !== 'application/javascript') {
         return body;
     }
@@ -36,7 +36,7 @@ module.exports = (body, mime, filePath) => {
         const base = path.dirname(filePath);
         let resolution;
         try {
-            resolution = resolve.sync(g2, { basedir: '/Users/paul/workspace/kit-app-shell-electron/app/node_modules/kit-app-ui/' });
+            resolution = resolve.sync(g2, { basedir: rootDir });
         } catch (e) {
             try {
                 resolution = resolve.sync(g2, { basedir: base });
