@@ -1,9 +1,7 @@
 const path = require('path');
 const resolve = require('resolve');
 
-console.log('loaded');
-
-module.exports = (rootDir, body, mime, filePath) => {
+module.exports = (rootDir, body, mime, filePath, urlPath) => {
     if (mime !== 'text/html' && mime !== 'application/javascript') {
         return body;
     }
@@ -27,9 +25,6 @@ module.exports = (rootDir, body, mime, filePath) => {
         return body;
     }
     body = body.replace(/import (.+ from )?'(.+)'/g, (match, g1, g2) => {
-        if (filePath.indexOf('@kano/code') != -1 && g2.indexOf('./@') !==- 1) {
-            console.log(filePath, g2);
-        }
         if (g2 && (g2.startsWith('.') || g2.startsWith('/'))) {
             return match;
         }
@@ -50,5 +45,29 @@ module.exports = (rootDir, body, mime, filePath) => {
         }
         return `import ${g1 || ''}'${importeeId.replace(/\\/g, '/')}'`;
     });
+    body = body.replace(/(.{1})import\((.+)\)\s*(.{1})/g, (match, g1, g2, g3) => {
+        if (g1 === '.' || g3 === '{') {
+            return match;
+        }
+        const base = path.dirname(filePath);
+        const fileRoot = path.normalize(filePath);
+        const pathRoot = path.normalize(urlPath);
+        const root = fileRoot.replace(pathRoot, '');
+        const rel = path.relative(root, base);
+
+        const importeeId = `'/${rel.replace(/\\/g, '/')}/' + ${g2}`;
+
+        const func = `${g1 || ''}new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.type = 'module';
+                script.src = ${importeeId};
+                script.onload = resolve;
+                script.onerror = reject;
+                document.body.appendChild(script);
+            })`;
+        
+        return func;
+    });
+    
     return body;
 };
