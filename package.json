@@ -1,6 +1,9 @@
 {
   "name": "@kano/es6-resolution",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "index.js",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "resolve": "^1.7.1"
+  }
 }
