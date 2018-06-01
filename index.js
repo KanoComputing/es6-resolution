@@ -21,6 +21,9 @@ module.exports = (rootDir, body, mime, filePath, urlPath) => {
     if (normalizedPath.indexOf('twemoji-min/2/twemoji.min.js') !== -1) {
         return body.replace('var twemoji=function()', 'window.twemoji=function()');
     }
+    if (normalizedPath.indexOf('tone/build/Tone.js') !== -1) {
+        return body.replace('}(this, function(){', '}(window, function(){');
+    }
     if (!body) {
         return body;
     }
