@@ -67,7 +67,7 @@ module.exports = (rootDir, body, mime, filePath, urlPath) => {
                 script.onload = resolve;
                 script.onerror = reject;
                 document.body.appendChild(script);
-            })`;
+            })${g3 || ''}`;
         
         return func;
     });
