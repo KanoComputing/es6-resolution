@@ -1,7 +1,7 @@
 const path = require('path');
 const resolve = require('resolve');
 
-module.exports = (rootDir, body, mime, filePath, urlPath) => {
+module.exports = (rootDir, body, mime, filePath, urlPath, onModule = () => {}) => {
     if (mime !== 'text/html' && mime !== 'application/javascript') {
         return body;
     }
@@ -46,9 +46,10 @@ module.exports = (rootDir, body, mime, filePath, urlPath) => {
         if (!importeeId.startsWith('.')) {
             importeeId = `./${importeeId}`;
         }
+        onModule(g2);
         return `import ${g1 || ''}'${importeeId.replace(/\\/g, '/')}'`;
     });
-    body = body.replace(/(.{1})import\((.+)\)\s*(.{1})/g, (match, g1, g2, g3) => {
+    body = body.replace(/(.{1})import\((.+?)\)\s*(.{1})/g, (match, g1, g2, g3) => {
         if (g1 === '.' || g3 === '{') {
             return match;
         }
@@ -57,8 +58,15 @@ module.exports = (rootDir, body, mime, filePath, urlPath) => {
         const pathRoot = path.normalize(urlPath);
         const root = fileRoot.replace(pathRoot, '');
         const rel = path.relative(root, base);
+        let normalizedRel = rel.replace(/\\/g, '/');
+        if (!normalizedRel.startsWith('/')) {
+            normalizedRel = `/${normalizedRel}`;
+        }
+        if (normalizedRel === '/') {
+            normalizedRel = '';
+        }
 
-        const importeeId = `'/${rel.replace(/\\/g, '/')}/' + ${g2}`;
+        const importeeId = `'${normalizedRel}/' + ${g2}`;
 
         const func = `${g1 || ''}new Promise((resolve, reject) => {
                 const script = document.createElement('script');
