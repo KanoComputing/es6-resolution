@@ -24,6 +24,9 @@ module.exports = (rootDir, body, mime, filePath, urlPath, onModule = () => {}) =
     if (normalizedPath.indexOf('tone/build/Tone.js') !== -1) {
         return body.replace('}(this, function(){', '}(window, function(){');
     }
+    if (normalizedPath.indexOf('tfjs/dist/tf.js') !== -1) {
+        return body.replace('}(this, (function (exports) {', '}(window, (function (exports) {');
+    }
     if (!body) {
         return body;
     }
@@ -68,13 +71,25 @@ module.exports = (rootDir, body, mime, filePath, urlPath, onModule = () => {}) =
 
         const importeeId = `'${normalizedRel}/' + ${g2}`;
 
-        const func = `${g1 || ''}new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.type = 'module';
-                script.src = ${importeeId};
-                script.onload = resolve;
-                script.onerror = reject;
-                document.body.appendChild(script);
+        const func = `${g1 || ''}new Promise((res, rej) => {
+                const s = ${importeeId};
+                const ps = document.head.querySelector(\`script[src="\${s}"]\`);
+                if (ps) {
+                    if (ps.loaded) {
+                        return res();
+                    }
+                    ps.onload = res;
+                    return;
+                }
+                const sc = document.createElement('script');
+                sc.type = 'module';
+                sc.src = s;
+                sc.onload = () => {
+                    sc.loaded = true;
+                    res();
+                };
+                sc.onerror = rej;
+                document.head.appendChild(sc);
             })${g3 || ''}`;
         
         return func;
