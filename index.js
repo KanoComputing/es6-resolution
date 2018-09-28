@@ -30,7 +30,7 @@ module.exports = (rootDir, body, mime, filePath, urlPath, onModule = () => {}) =
     if (!body) {
         return body;
     }
-    body = body.replace(/(.+ from )?'(.+)'/g, (match, g1, g2) => {
+    body = body.replace(/(import|export) (.+ from )?'(.+)'/g, (match, g0, g1, g2) => {
         if (g2 && (g2.startsWith('.') || g2.startsWith('/'))) {
             return match;
         }
@@ -50,7 +50,7 @@ module.exports = (rootDir, body, mime, filePath, urlPath, onModule = () => {}) =
             importeeId = `./${importeeId}`;
         }
         onModule(g2);
-        return `${g1 || ''}'${importeeId.replace(/\\/g, '/')}'`;
+        return `${g0} ${g1 || ''}'${importeeId.replace(/\\/g, '/')}'`;
     });
     body = body.replace(/(.{1})import\((.*?)\)\s*(.{1})/g, (match, g1, g2, g3) => {
         if (g1 === '.' || g3 === '{') {
