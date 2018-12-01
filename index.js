@@ -69,7 +69,7 @@ module.exports = (rootDir, body, mime, filePath, urlPath, onModule = () => {}) =
             normalizedRel = '';
         }
 
-        const importeeId = `'${normalizedRel}/' + ${g2}`;
+        const importeeId = `'${normalizedRel}/' + (${g2})`;
 
         const func = `${g1 || ''}new Promise((res, rej) => {
                 const s = ${importeeId};
