@@ -56,20 +56,12 @@ module.exports = (rootDir, body, mime, filePath, urlPath, onModule = () => {}) =
         if (g1 === '.' || g3 === '{') {
             return match;
         }
-        const base = path.dirname(filePath);
-        const fileRoot = path.normalize(filePath);
-        const pathRoot = path.normalize(urlPath);
-        const root = fileRoot.replace(pathRoot, '');
-        const rel = path.relative(root, base);
-        let normalizedRel = rel.replace(/\\/g, '/');
-        if (!normalizedRel.startsWith('/')) {
-            normalizedRel = `/${normalizedRel}`;
-        }
-        if (normalizedRel === '/') {
-            normalizedRel = '';
-        }
+        // Find what's the context of the current script and use it to prefix the import
+        // This will ensure relative imports added using a script will be resolved from
+        // the root
+        const prefix = path.dirname(urlPath);
 
-        const importeeId = `'${normalizedRel}/' + (${g2})`;
+        const importeeId = `'${prefix}/' + (${g2})`;
 
         const func = `${g1 || ''}new Promise((res, rej) => {
                 const s = ${importeeId};
