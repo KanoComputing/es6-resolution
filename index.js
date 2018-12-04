@@ -1,7 +1,7 @@
 const path = require('path');
 const resolve = require('resolve');
 
-function resolvePath(g2, filePath, rootDir) {
+function resolvePath(match, g2, filePath, rootDir) {
     const base = path.dirname(filePath);
     let resolution;
     try {
@@ -53,7 +53,7 @@ module.exports = (rootDir, body, mime, filePath, urlPath, onModule = () => {}) =
         if (g2 && (g2.startsWith('.') || g2.startsWith('/'))) {
             return match;
         }
-        const importeeId = resolvePath(g2, filePath, rootDir);
+        const importeeId = resolvePath(match, g2, filePath, rootDir);
         onModule(g2);
         return `${g0} ${g1 || ''}'${importeeId}'`;
     });
@@ -61,7 +61,7 @@ module.exports = (rootDir, body, mime, filePath, urlPath, onModule = () => {}) =
         if (g1 === '.' || g4 === '{' || (g2 && (g2.startsWith('.') || g2.startsWith('/')))) {
             return match;
         }
-        const importeeId = resolvePath(g2, filePath, rootDir);
+        const importeeId = resolvePath(match, g2, filePath, rootDir);
         return `${g1 || ''}import('${importeeId}')${g3}${g4}`;
     });
     
