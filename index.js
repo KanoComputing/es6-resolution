@@ -1,6 +1,25 @@
 const path = require('path');
 const resolve = require('resolve');
 
+function resolvePath(g2, filePath, rootDir) {
+    const base = path.dirname(filePath);
+    let resolution;
+    try {
+        resolution = resolve.sync(g2, { basedir: rootDir });
+    } catch (e) {
+        try {
+            resolution = resolve.sync(g2, { basedir: base });
+        } catch (e) {
+            return match;
+        }
+    }
+    let importeeId = path.relative(base, resolution);
+    if (!importeeId.startsWith('.')) {
+        importeeId = `./${importeeId}`;
+    }
+    return importeeId.replace(/\\/g, '/')
+}
+
 module.exports = (rootDir, body, mime, filePath, urlPath, onModule = () => {}) => {
     if (mime !== 'text/html' && mime !== 'application/javascript') {
         return body;
@@ -34,57 +53,16 @@ module.exports = (rootDir, body, mime, filePath, urlPath, onModule = () => {}) =
         if (g2 && (g2.startsWith('.') || g2.startsWith('/'))) {
             return match;
         }
-        const base = path.dirname(filePath);
-        let resolution;
-        try {
-            resolution = resolve.sync(g2, { basedir: rootDir });
-        } catch (e) {
-            try {
-                resolution = resolve.sync(g2, { basedir: base });
-            } catch (e) {
-                return match;
-            }
-        }
-        let importeeId = path.relative(base, resolution);
-        if (!importeeId.startsWith('.')) {
-            importeeId = `./${importeeId}`;
-        }
+        const importeeId = resolvePath(g2, filePath, rootDir);
         onModule(g2);
-        return `${g0} ${g1 || ''}'${importeeId.replace(/\\/g, '/')}'`;
+        return `${g0} ${g1 || ''}'${importeeId}'`;
     });
-    body = body.replace(/(.{1})import\((.*?)\)\s*(.{1})/g, (match, g1, g2, g3) => {
-        if (g1 === '.' || g3 === '{') {
+    body = body.replace(/(.{1})?import\('(.*?)'\)(\s*)(.{1})/g, (match, g1, g2, g3, g4) => {
+        if (g1 === '.' || g4 === '{' || (g2 && (g2.startsWith('.') || g2.startsWith('/')))) {
             return match;
         }
-        // Find what's the context of the current script and use it to prefix the import
-        // This will ensure relative imports added using a script will be resolved from
-        // the root
-        const prefix = path.dirname(urlPath);
-
-        const importeeId = `'${prefix}/' + (${g2})`;
-
-        const func = `${g1 || ''}new Promise((res, rej) => {
-                const s = ${importeeId};
-                const ps = document.head.querySelector(\`script[src="\${s}"]\`);
-                if (ps) {
-                    if (ps.loaded) {
-                        return res();
-                    }
-                    ps.onload = res;
-                    return;
-                }
-                const sc = document.createElement('script');
-                sc.type = 'module';
-                sc.src = s;
-                sc.onload = () => {
-                    sc.loaded = true;
-                    res();
-                };
-                sc.onerror = rej;
-                document.head.appendChild(sc);
-            })${g3 || ''}`;
-        
-        return func;
+        const importeeId = resolvePath(g2, filePath, rootDir);
+        return `${g1 || ''}import('${importeeId}')${g3}${g4}`;
     });
     
     return body;
