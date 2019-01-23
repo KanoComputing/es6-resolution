@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 const resolve = require('resolve');
 
@@ -13,7 +14,8 @@ function resolvePath(match, g2, filePath, rootDir) {
             return match;
         }
     }
-    let importeeId = path.relative(base, resolution);
+    const realPath = fs.realpathSync(resolution);
+    let importeeId = path.relative(base, realPath);
     if (!importeeId.startsWith('.')) {
         importeeId = `./${importeeId}`;
     }
