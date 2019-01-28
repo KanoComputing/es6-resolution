@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 const resolve = require('resolve');
 
@@ -13,7 +14,8 @@ function resolvePath(match, g2, filePath, rootDir) {
             return match;
         }
     }
-    let importeeId = path.relative(base, resolution);
+    const realPath = fs.realpathSync(resolution);
+    let importeeId = path.relative(base, realPath);
     if (!importeeId.startsWith('.')) {
         importeeId = `./${importeeId}`;
     }
@@ -49,13 +51,13 @@ module.exports = (rootDir, body, mime, filePath, urlPath, onModule = () => {}) =
     if (!body) {
         return body;
     }
-    body = body.replace(/(import|export) (.+ from )?'(.+)'/g, (match, g0, g1, g2) => {
-        if (g2 && (g2.startsWith('.') || g2.startsWith('/'))) {
+    body = body.replace(/((?:import|export)(?:["'\s]*(?:[\w*{}\n\r\t, $]+)from\s*)?\s+["'])(.*(?:[@\w_-]+))(["'\s].*;?)$/gm, (match, start, importee, end) => {
+        if (importee && (importee.startsWith('.') || importee.startsWith('/'))) {
             return match;
         }
-        const importeeId = resolvePath(match, g2, filePath, rootDir);
-        onModule(g2);
-        return `${g0} ${g1 || ''}'${importeeId}'`;
+        const importeeId = resolvePath(match, importee, filePath, rootDir);
+        onModule(importee);
+        return `${start}${importeeId}${end}`;
     });
     body = body.replace(/(.{1})?import\('(.*?)'\)(\s*)(.{1})/g, (match, g1, g2, g3, g4) => {
         if (g1 === '.' || g4 === '{' || (g2 && (g2.startsWith('.') || g2.startsWith('/')))) {
@@ -64,6 +66,6 @@ module.exports = (rootDir, body, mime, filePath, urlPath, onModule = () => {}) =
         const importeeId = resolvePath(match, g2, filePath, rootDir);
         return `${g1 || ''}import('${importeeId}')${g3}${g4}`;
     });
-    
+
     return body;
 };
