@@ -19,4 +19,4 @@ Will be translated to
 import { Utils } from '../../node_modules/@acme/my-lib/lib/utils.js';
 ```
 
-Browsers will be happy and no code compilation needed
+Browsers will be happy and no code compilation is needed
