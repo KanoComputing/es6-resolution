@@ -58,7 +58,7 @@ function resolvePath(importee : string, filePath : string, rootDir : string) {
  * @param mime Mime type of the file, only js and html files are processed
  * @param filePath Location of the file on the disk
  */
-export default function resolveNamedPath(rootDir : string, body : string, mime : string, filePath : string) {
+export function resolveNamedPath(rootDir : string, body : string, mime : string, filePath : string) {
     if (mime !== 'text/html' && mime !== 'application/javascript') {
         return body;
     }
@@ -102,3 +102,5 @@ export default function resolveNamedPath(rootDir : string, body : string, mime :
 
     return body;
 };
+
+export default resolveNamedPath;
