@@ -16,6 +16,13 @@ function normalizePath(input: string) {
     return input.replace(/\\/g, '/');
 }
 
+function maybeRealPath(input : string) {
+    if (process.env.ES6_RESOLUTION_REALPATH) {
+        return fs.realpathSync(input);
+    }
+    return input;
+}
+
 /**
  * Returns a relative path to a module from a named path
  * @param importee Named module path to resolve
@@ -41,7 +48,7 @@ function resolvePath(importee : string, filePath : string, rootDir : string) {
         // Save the result
         cache.set(importee, resolution);
     }
-    const realPath = fs.realpathSync(resolution);
+    const realPath = maybeRealPath(resolution);
     let importeeId = path.relative(base, realPath);
     if (!importeeId.startsWith('.')) {
         importeeId = `./${importeeId}`;
@@ -75,8 +82,8 @@ export function resolveNamedPath(rootDir : string, body : string, mime : string,
         }
     }
     // Get the real paths on the disk
-    const realFilePath = fs.realpathSync(filePath);
-    const realRootDir = fs.realpathSync(rootDir);
+    const realFilePath = maybeRealPath(filePath);
+    const realRootDir = maybeRealPath(rootDir);
     // Replace declarative imports
     body = body.replace(/((?:import|export)(?:["'\s]*(?:[\w*{}\n\r\t, $]+)from\s*)?\s+["'])(.*(?:[@\w_-]+))(["'\s].*;?)$/gm, (match, start, importee, end) => {
         // Start with . or / means it is not a named import, but a relative or absolute one. Browsers can deal with that
