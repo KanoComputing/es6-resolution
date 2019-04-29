@@ -65,7 +65,7 @@ function resolvePath(importee : string, filePath : string, rootDir : string) {
  * @param mime Mime type of the file, only js and html files are processed
  * @param filePath Location of the file on the disk
  */
-export function resolveNamedPath(rootDir : string, body : string, mime : string, filePath : string) {
+export function resolveNamedPath(rootDir : string, body : string, mime : string, filePath : string, customReplacements? : IReplacement[]) {
     if (mime !== 'text/html' && mime !== 'application/javascript') {
         return body;
     }
@@ -74,9 +74,10 @@ export function resolveNamedPath(rootDir : string, body : string, mime : string,
         return body;
     }
     let replacement : IReplacement;
+    const allReplacements = customReplacements ? replacements.concat(customReplacements) : replacements;
     // Apply the replacements. The first replacement to match will return the new body
-    for (let i = 0; i < replacements.length; i += 1) {
-        replacement = replacements[i];
+    for (let i = 0; i < allReplacements.length; i += 1) {
+        replacement = allReplacements[i];
         if (replacement.test.test(normalizedPath)) {
             return body.replace(replacement.from, replacement.to);
         }
